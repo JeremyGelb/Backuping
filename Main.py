@@ -159,16 +159,35 @@ def CleanOldVersion(OldPath,MaxTime) :
             for element in AsZippedFolder : 
                 if element in Folder.name : 
                     if abs(datetime.timestamp(now) - os.path.getctime(Folder)) > MaxTime :
-                        Operations.append([(shutil.copytree,(str(Folder),Dest+"/"+Folder.name)),
-                                (shutil.rmtree,(Folder))
+                        # cas ou le fichier n'est pas present dans le dossier deleted
+                        if os.path.isdir(Dest+"/"+Folder.name)==False and os.path.isfile(Dest+"/"+Folder.name)==False :
+                            Operations.append([(shutil.copytree,(str(Folder),Dest+"/"+Folder.name),"Archive copied to  :  "+str(Dest+"/"+Folder.name)),
+                                (shutil.rmtree,(Folder),"Old archive deleted : "+str(Folder))
                         ])
+                        # sinon :
+                        else : 
+                            Operations.append([
+                                (shutil.rmtree,(Dest.replace("\\","/")+"/"+Folder.name),"previous old archive deleted : "+str(Dest+"/"+Folder.name)),
+                                (shutil.copytree,(str(Folder),Dest+"/"+Folder.name),"Archive copied to  :  "+str(Dest+"/"+Folder.name)),
+                                (shutil.rmtree,(Folder),"Old archive deleted : "+str(Folder))
+                        ])
+                        
                     #copy_tree(str(Folder),Dest.joinpath(Folder.name))
     ##Verification des fichiers
     for File in OldPath.walkfiles() : 
         if abs(datetime.timestamp(now) - os.path.getmtime(File)) > MaxTime*24*60*60 : 
-            Operations.append([
+            #cas ou le fichier n'est pas present dans le dossier deleted
+            if os.path.isfile(str(Dest+"/"+File.name))==False :
+                Operations.append([
                     (shutil.move,(str(File),str(Dest+"/"+File.name)),"File moved to Deleted : "+str(File))
                     ])
+            #sinon
+            else : 
+                Operations.append([
+                    (os.remove,(str(Dest+"/"+File.name)),"previous old file deleted : "+str(Dest+"/"+File.name)),
+                    (shutil.move,(str(File),str(Dest+"/"+File.name)),"File moved to Deleted : "+str(File))
+                    ])
+            
             #shutil.move(File,Dest.joinpath(File.name))
     return Operations
         
@@ -398,18 +417,18 @@ def StartBackup(Root1,Root2,UpdateVersions = False, UpdateDelete=False, MaxTimeV
 #########################################
         
 Parameters = [
-        {"InputFolder" :"L:/",
-         "OutputFolder":"Z:/CLEFS/PyBackup/JG_DOC",
-         "CleanVersion":True,"CleanOld":True,"WaitVersion":30,"WaitDelete":30, "NbCores":40},
-        {"InputFolder" :"J:/",
-         "OutputFolder":"Z:/CLEFS/PyBackup/JG_PROJ",
-         "CleanVersion":True,"CleanOld":True,"WaitVersion":30,"WaitDelete":30, "NbCores":40},
+#        {"InputFolder" :"L:/",
+#         "OutputFolder":"Z:/CLEFS/PyBackup/JG_DOC",
+#         "CleanVersion":True,"CleanOld":True,"WaitVersion":30,"WaitDelete":30, "NbCores":40},
+#        {"InputFolder" :"G:/",
+#         "OutputFolder":"F:/CLEFS/PyBackup/JG_PROJ",
+#         "CleanVersion":True,"CleanOld":True,"WaitVersion":30,"WaitDelete":30, "NbCores":40},
 #        {"InputFolder" :"I:/",
 #         "OutputFolder":"F:/__PyKeysBackup/JG_PROG",
 #         "CleanVersion":True,"CleanOld":True,"WaitVersion":30,"WaitDelete":30, "NbCores":40},
-#        {"InputFolder" :"H:/",
-#         "OutputFolder":"F:/__PyKeysBackup/JG_DOC",
-#         "CleanVersion":True,"CleanOld":True,"WaitVersion":30,"WaitDelete":30, "NbCores":40},
+        {"InputFolder" :"H:/",
+         "OutputFolder":"F:/__PyKeysBackup/JG_DOC",
+         "CleanVersion":True,"CleanOld":True,"WaitVersion":30,"WaitDelete":30, "NbCores":40},
 #          {"InputFolder" :"J:/",
 #         "OutputFolder":"Z:/CLEFS/PyBackup/JG_PROJ",
 #         "CleanVersion":True,"CleanOld":True,"WaitVersion":30,"WaitDelete":30, "NbCores":40},
